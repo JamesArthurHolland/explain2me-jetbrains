@@ -8,17 +8,19 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.Inlay
+import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.ScrollType
-import com.intellij.openapi.editor.markup.HighlighterLayer
-import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.xdebugger.ui.DebuggerColors
+import dev.e2m.core.E2mFolding
+import dev.e2m.debug.DebugBridge
 import java.util.concurrent.CopyOnWriteArrayList
 
 /** What the Explain2Me tool window shows. */
@@ -47,9 +49,6 @@ class E2mPresenter(private val project: Project) : Disposable {
     var statusLine: String = ""
         private set
 
-    private var highlighter: RangeHighlighter? = null
-    private var inlay: Inlay<*>? = null
-
     fun addListener(l: Listener, parent: Disposable) {
         listeners += l
         Disposer.register(parent) { listeners -= l }
@@ -75,25 +74,43 @@ class E2mPresenter(private val project: Project) : Disposable {
     }
 
     private fun decorate(editor: Editor, line0: Int, view: StepView, inline: Boolean) {
+        // Opening the editor can pump queued events (e.g. another show()), so clear again right before drawing.
+        clearEditorDecorations()
         val doc = editor.document
         if (line0 !in 0 until doc.lineCount) return
-        highlighter = editor.markupModel.addLineHighlighter(
-            line0, HighlighterLayer.SELECTION - 1, TextAttributes(null, NarrationRenderer.LINE, null, null, 0),
-        )
+        // During a replay the narration *is* the explanation, so fold the e2m comments out of the way
+        // (they stay one click away as "ⓔ id — title" placeholders).
+        if (view.source != "ai") E2mFolding.apply(editor, false)
+        // Use the debugger's own execution-point colours. When the debugger is paused on this very line it
+        // already draws that highlight, so don't paint over it.
+        val pos = DebugBridge.getInstance(project).currentPosition()
+        val debuggerIsHere = pos != null && pos.file == editor.virtualFile && pos.line == line0
+        if (!debuggerIsHere) {
+            val attrs = editor.colorsScheme.getAttributes(DebuggerColors.EXECUTIONPOINT_ATTRIBUTES)
+                ?: TextAttributes(null, NarrationRenderer.LINE, null, null, 0)
+            editor.markupModel.addLineHighlighter(line0, DebuggerColors.EXECUTION_LINE_HIGHLIGHTERLAYER, attrs)
+                .putUserData(DECORATION, true)
+        }
         if (inline && view.text.isNotBlank()) {
             val start = doc.getLineStartOffset(line0)
             val lineText = doc.charsSequence.subSequence(start, doc.getLineEndOffset(line0))
             val firstNonWs = start + lineText.indexOfFirst { !it.isWhitespace() }.coerceAtLeast(0)
             val indent = editor.offsetToXY(firstNonWs).x
-            inlay = editor.inlayModel.addBlockElement(start, false, true, 0, NarrationRenderer(view.title, view.text, indent))
+            editor.inlayModel.addBlockElement(start, false, true, 0, NarrationRenderer(view.title, view.text, indent))
         }
         editor.caretModel.moveToOffset(doc.getLineStartOffset(line0))
         editor.scrollingModel.scrollToCaret(ScrollType.CENTER)
     }
 
+    /** Removes every narration inlay and line highlight Explain2Me drew in this project's editors. Must be called on the EDT. */
     fun clearEditorDecorations() {
-        highlighter?.dispose(); highlighter = null
-        inlay?.let { Disposer.dispose(it) }; inlay = null
+        for (editor in EditorFactory.getInstance().allEditors) {
+            if (editor.project != project || editor.isDisposed) continue
+            editor.inlayModel.getBlockElementsInRange(0, editor.document.textLength)
+                .filter { it.renderer is NarrationRenderer }
+                .forEach { Disposer.dispose(it) }
+            editor.markupModel.allHighlighters.filter { it.getUserData(DECORATION) == true }.forEach { it.dispose() }
+        }
     }
 
     fun clear() {
@@ -108,6 +125,9 @@ class E2mPresenter(private val project: Project) : Disposable {
 
     companion object {
         fun getInstance(project: Project): E2mPresenter = project.service()
+
+        /** Marks highlighters drawn by Explain2Me so they can always be found and removed. */
+        private val DECORATION = Key.create<Boolean>("e2m.decoration")
 
         /** Human readable rendering of variables / evaluation JSON for the tool window. */
         fun describe(variables: JsonElement?, evaluations: List<Pair<String, JsonElement?>>): String? {

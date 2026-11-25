@@ -67,7 +67,7 @@ To try it without installing, run `./gradlew runIde`. This opens a sandbox IDE w
 | `e2m_get_state` / `e2m_get_frames` / `e2m_get_variables` / `e2m_evaluate` | Inspect the paused program |
 | `e2m_explain` | Highlight a line and show the narration in the editor and tool window. When recording, it becomes a replay step |
 | `e2m_session_start` / `e2m_session_save` / `e2m_session_list` | Record walkthroughs into `.e2m/sessions/` |
-| `e2m_replay` / `e2m_replay_control` | Present a saved session (static or live) and drive it with `next`/`prev`/`stop` |
+| `e2m_replay` / `e2m_replay_control` | Present a saved session (static, or as a live debug) and drive it with `next`/`prev`/`stop` |
 | `e2m_annotate` | Write a permanent `e2m` comment (inline, or with a shadow note) into the code |
 | `e2m_fold` | Collapse or expand all e2m comments in open editors |
 | `e2m_stop_debug`, `e2m_open` | Utility |
@@ -112,11 +112,44 @@ that line, so the step can be found again if the code moves), the narration `tex
 (`set_breakpoint`, `start`, `over`, `into`, `out`, `resume`, `run_to_line`, …).
 
 * **Static replay** (tool window *Next ▶* / *◀ Prev*, or clicking a step) shows each step with the values recorded at the time.
-* **Live replay** (*Live replay*) starts the session's run configuration under the debugger and re-executes each
+* **Live debug** (the button with the debug icon) starts the session's run configuration under the debugger and re-executes each
   step's commands, so the program really stops at the same places. Values are re-evaluated live. Other breakpoints
   are temporarily disabled and restored afterwards.
 
 The files are plain JSON and markdown, so they can be reviewed, committed and shared like code.
+
+## Stepping through a session
+
+Open the **Explain2Me** tool window (right-hand side; the ⓔ icon), pick a session in the *Session* box and press **Load**.
+The step list fills in and step 1 is shown.
+
+Explain2Me never starts your program by itself. Opening the project, loading a session and static replay only read files.
+The program is launched only when you press **Live debug**, or when Claude calls `e2m_start_debug` (or `e2m_replay` with
+`live: true`). It is always launched with the **Debug** executor, never plain Run.
+
+**Static replay**, for reading. No debugger is needed:
+* **Next ▶** / **◀ Prev** move one step. Clicking a step in the list jumps straight to it.
+* For each step, the editor opens the file, highlights the line in the debugger's execution-point colour and draws the
+  narration in a box just above it. The tool window shows the same text, plus the variables and evaluated expressions
+  that were recorded at that point.
+* The e2m comments in the shown file are folded so the narration has room. Use *Expand e2m* (or
+  <kbd>Ctrl+Alt+Shift+E</kbd>) to open them again.
+
+**Live debug**, which runs the program for real:
+1. Press **Live debug**. The plugin temporarily disables your own breakpoints, sets the session's breakpoints and starts the
+   session's run configuration (*Regression demo* in the examples) under the debugger.
+2. The program stops at step 1. The **Debug** tool window opens as usual, with the normal blue execution line, and the
+   frames and variables panes are live.
+3. Press **Next ▶** to run the recorded debugger commands for the next step (step into, step over, resume to the next
+   breakpoint, …). The program really moves forward, and the values shown are evaluated again in the running program.
+4. You can poke around between steps, for example by hovering variables or evaluating expressions. Stepping by hand moves
+   the program away from where the session expects it, though, so let **Next ▶** drive.
+5. Live debug only goes forward. After the last step, or when you press **Stop**, the debugger is stopped, the
+   session's breakpoints are removed and your own breakpoints are re-enabled. To look back, use static replay.
+
+**Letting Claude drive** works the same way over MCP. Ask Claude to "run the linear-regression session as a live debug and explain each
+step", and it calls `e2m_replay` / `e2m_replay_control next`. It can also step the debugger itself (`e2m_step`, `e2m_run_to_line`,
+`e2m_evaluate`) and narrate with `e2m_explain`, which draws in the editor exactly like a replay step.
 
 ## Examples (`examples/`)
 
@@ -145,7 +178,8 @@ To try one, open its folder in the matching IDE:
 * **Go:** a Go SDK is needed.
 * **Python:** pick a Python 3 interpreter.
 
-Then open the **Explain2Me** tool window, choose `linear-regression`, and press **Load** and **Next ▶**, or **Live replay**.
+Then open the **Explain2Me** tool window, choose `linear-regression`, and press **Load** and **Next ▶**, or **Live debug**
+(see [Stepping through a session](#stepping-through-a-session)).
 
 ## Development
 

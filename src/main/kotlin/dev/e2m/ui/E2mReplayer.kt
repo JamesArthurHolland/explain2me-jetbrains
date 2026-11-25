@@ -71,7 +71,7 @@ class E2mReplayer(private val project: Project) {
             disabledByReplay = bridge.disableAllExcept(sessionBps)
             live = true
             index = -1
-            presenter.status("Live replay of '${s.title ?: s.name}' — starting debugger…")
+            presenter.status("Live debug of '${s.title ?: s.name}' — starting debugger…")
             liveStep()
         }
     }
@@ -79,13 +79,13 @@ class E2mReplayer(private val project: Project) {
     private fun liveStep() {
         val s = session ?: return
         val i = index + 1
-        if (i !in s.steps().indices) { finishLive("Live replay finished"); return }
+        if (i !in s.steps().indices) { finishLive("Live debug finished"); return }
         val step = s.steps()[i]
         for (cmd in step.commands.orEmpty()) {
             if (cmd.action == "start" && cmd.configuration.isNullOrBlank()) cmd.configuration = s.runConfiguration
             presenter.status("Step ${i + 1}: ${cmd.action}${cmd.file?.let { " $it:${cmd.line}" } ?: ""}")
             val r = runCatching { E2mCommands.execute(project, cmd) }
-            r.exceptionOrNull()?.let { finishLive("Live replay stopped: ${it.message}"); return }
+            r.exceptionOrNull()?.let { finishLive("Live debug stopped: ${it.message}"); return }
             if (r.getOrNull()?.outcome == DebugBridge.STOPPED && cmd.action != "stop") {
                 finishLive("Program finished before step ${i + 1}"); return
             }
@@ -97,11 +97,11 @@ class E2mReplayer(private val project: Project) {
             e.expression to (if (paused) runCatching<JsonElement> { bridge.evaluate(e.expression, 0, 0) }
                 .getOrElse { com.google.gson.JsonPrimitive("error: ${it.message}") } else e.value)
         }
-        showStep(step, i, s, "live replay", vars, evals)
-        presenter.status("Live replay: step ${i + 1}/${s.steps().size}" + if (i + 1 == s.steps().size) " (last)" else "")
+        showStep(step, i, s, "live debug", vars, evals)
+        presenter.status("Live debug: step ${i + 1}/${s.steps().size}" + if (i + 1 == s.steps().size) " (last)" else "")
     }
 
-    fun stopLive() = background { finishLive("Live replay stopped") }
+    fun stopLive() = background { finishLive("Live debug stopped") }
 
     private fun finishLive(message: String) {
         if (!live) return

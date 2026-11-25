@@ -23,7 +23,7 @@ class E2mSession(
     var name: String = "",
     var title: String? = null,
     var description: String? = null,
-    /** Run configuration used for live replay. */
+    /** Run configuration used for live debug. */
     var runConfiguration: String? = null,
     var createdAt: String? = null,
     var steps: MutableList<E2mStep>? = mutableListOf(),

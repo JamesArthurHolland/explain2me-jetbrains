@@ -38,7 +38,7 @@ object E2mTools {
           4. Repeat: inspect (state is returned by every step; e2m_get_variables / e2m_evaluate for more),
              then e2m_explain with a short narration of what this line does and what the values mean,
              then e2m_step (over/into/out/resume) or e2m_run_to_line.
-          5. e2m_session_save. The user can replay it from the Explain2Me tool window (static or live).
+          5. e2m_session_save. The user can replay it from the Explain2Me tool window (static, or as a live debug).
         e2m_annotate writes permanent explanation comments into the code (// e2m :f <note> with a shadow
         note in .e2m/notes, or an inline /* e2m := ... */). Prefer annotating after recording a session.
     """.trimIndent()
@@ -203,7 +203,7 @@ object E2mTools {
             schema(
                 "name" to prop("string", "File name, e.g. 'linear-regression' (letters, digits, . _ -)"),
                 "title" to prop("string", "Human title"), "description" to prop("string", "What this walkthrough explains"),
-                "runConfiguration" to prop("string", "Run configuration for live replay (default: the one passed to e2m_start_debug)"),
+                "runConfiguration" to prop("string", "Run configuration for live debug (default: the one passed to e2m_start_debug)"),
                 required = listOf("name"),
             ),
         ) { c ->
@@ -232,7 +232,7 @@ object E2mTools {
             }
         },
         Tool(
-            "e2m_replay", "Open a saved session in the Explain2Me tool window for the user (static, or live under the debugger).",
+            "e2m_replay", "Open a saved session in the Explain2Me tool window for the user (static, or as a live debug under the debugger).",
             schema("name" to prop("string", "Session name"), "live" to prop("boolean", "Re-run under the debugger (default false)"),
                 "step" to prop("integer", "1-based step to show first (static only)"), required = listOf("name")),
         ) { c ->

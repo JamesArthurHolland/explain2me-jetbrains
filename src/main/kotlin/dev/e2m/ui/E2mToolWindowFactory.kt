@@ -1,5 +1,6 @@
 package dev.e2m.ui
 
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
@@ -51,7 +52,9 @@ private class E2mPanel(private val project: Project) : JPanel(BorderLayout()), D
     }
     private val prev = JButton("◀ Prev")
     private val next = JButton("Next ▶")
-    private val liveBtn = JButton("Live replay")
+    private val liveBtn = JButton("Live debug", AllIcons.Actions.StartDebugger).apply {
+        toolTipText = "Run the session under the debugger, stopping at each step"
+    }
     private val stopLive = JButton("Stop")
     private var updatingSteps = false
 

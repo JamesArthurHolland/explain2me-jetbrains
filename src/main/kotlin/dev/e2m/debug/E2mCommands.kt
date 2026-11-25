@@ -5,7 +5,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import dev.e2m.core.E2mPaths
 import dev.e2m.session.E2mCommand
 
-/** Executes recorded/requested [E2mCommand]s. Shared by the server tools and live replay. */
+/** Executes recorded/requested [E2mCommand]s. Shared by the server tools and live debug. */
 object E2mCommands {
     const val DEFAULT_TIMEOUT_MS = 30_000L
     const val START_TIMEOUT_MS = 180_000L
