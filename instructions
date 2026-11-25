@@ -1,0 +1,25 @@
+# Explain2Me
+
+I need a jetbrains plugin built, which can handle debugger instructions.
+
+This is to act as conduit between claude ai and the jetbrains IDE. The AI should be able to add breakpoints,
+and step through code, to explain the code.
+
+To save the session / explanation for replayability, there should be a .e2m folder inside the root folder of a project.
+
+The plugin should run as a http server or something perhaps? Use your intuition here and explain the reasoning.
+
+Inside code files, around code blocks which have e2m explainations, there should be a comment like
+
+// e2m :f which should point to the shadow file and have the explanation in it
+
+or alternatively
+
+/* e2m :=  verbose multi line version hand written */
+
+The plugin should be able to expand and collapse all e2m explanations in code to hide them, separate to other code
+comment types
+
+
+Create an example that goes through some mathematical process across 2 or 3 files, and create a reproducible e2m around
+the functionality so that people can understand what is happening.

@@ -1,0 +1,453 @@
+{
+  "version": 1,
+  "name": "linear-regression",
+  "title": "Least squares, step by step",
+  "description": "Walks through fitting y = a + b·x to five points: means, Sxy, Sxx, slope, intercept and R², across Main, LinearRegression and Stats.",
+  "runConfiguration": "Regression demo",
+  "createdAt": "2026-11-25T14:53:32Z",
+  "steps": [
+    {
+      "title": "The data",
+      "file": "src/main/java/e2m/example/Main.java",
+      "line": 13,
+      "anchor": "LinearRegression.Fit fit = LinearRegression.fit(xs, ys);",
+      "text": "We have five points (x, y): (1,2) (2,4) (3,5) (4,4) (5,5).\n\nGoal: find the straight line **y = a + b·x** that is *closest* to all of them, where closest means the sum of the squared vertical distances is as small as possible (*ordinary least squares*).\n\nNext we step **into** `LinearRegression.fit` to watch it happen.",
+      "commands": [
+        {
+          "action": "set_breakpoint",
+          "file": "src/main/java/e2m/example/Main.java",
+          "line": 13,
+          "anchor": "LinearRegression.Fit fit = LinearRegression.fit(xs, ys);"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "src/main/java/e2m/example/Stats.java",
+          "line": 14,
+          "anchor": "return sum / values.length;"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "src/main/java/e2m/example/Stats.java",
+          "line": 38,
+          "anchor": "return total;"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "src/main/java/e2m/example/Stats.java",
+          "line": 27,
+          "anchor": "return total;"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "src/main/java/e2m/example/LinearRegression.java",
+          "line": 31,
+          "anchor": "double intercept = yMean - slope * xMean;"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "src/main/java/e2m/example/LinearRegression.java",
+          "line": 46,
+          "anchor": "return 1 - ssRes / ssTot;"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "src/main/java/e2m/example/Main.java",
+          "line": 19,
+          "anchor": "System.out.printf(\"prediction for x = 6: %.2f%n\", fit.predict(6));"
+        },
+        {
+          "action": "start",
+          "configuration": "Regression demo"
+        }
+      ],
+      "variables": [
+        {
+          "name": "args",
+          "type": "String[0]@923",
+          "value": "[]"
+        },
+        {
+          "name": "xs",
+          "type": "double[5]@924",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "ys",
+          "type": "double[5]@925",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "hasChildren": true
+        }
+      ],
+      "evaluations": []
+    },
+    {
+      "title": "Inside fit(): validate",
+      "file": "src/main/java/e2m/example/LinearRegression.java",
+      "line": 15,
+      "anchor": "if (xs.length != ys.length || xs.length < 2) {",
+      "text": "First a sanity check: we need as many x values as y values, and at least two points — one point does not define a line.\n\nBoth arrays have length 5, so we carry on.",
+      "commands": [
+        {
+          "action": "into"
+        }
+      ],
+      "variables": [
+        {
+          "name": "xs",
+          "type": "double[5]@924",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "ys",
+          "type": "double[5]@925",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "hasChildren": true
+        }
+      ],
+      "evaluations": []
+    },
+    {
+      "title": "Mean of x",
+      "file": "src/main/java/e2m/example/Stats.java",
+      "line": 14,
+      "anchor": "return sum / values.length;",
+      "text": "`mean` adds the values up and divides by how many there are.\n\nFor xs: 1 + 2 + 3 + 4 + 5 = **15**, and 15 / 5 = **x̄ = 3**.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "values",
+          "type": "double[5]@924",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "sum",
+          "value": "15.0"
+        }
+      ],
+      "evaluations": [
+        {
+          "expression": "sum / values.length",
+          "value": {
+            "name": "sum / values.length",
+            "value": "3.0"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Mean of y",
+      "file": "src/main/java/e2m/example/Stats.java",
+      "line": 14,
+      "anchor": "return sum / values.length;",
+      "text": "Same function, now called with ys: 2 + 4 + 5 + 4 + 5 = **20**, so **ȳ = 4**.\n\nThe point (x̄, ȳ) = (3, 4) is the *centroid* of the data. Remember it — the fitted line will pass through it.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "values",
+          "type": "double[5]@925",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "sum",
+          "value": "20.0"
+        }
+      ],
+      "evaluations": [
+        {
+          "expression": "sum / values.length",
+          "value": {
+            "name": "sum / values.length",
+            "value": "4.0"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Co-spread: Sxy",
+      "file": "src/main/java/e2m/example/Stats.java",
+      "line": 38,
+      "anchor": "return total;",
+      "text": "For each point we measure how far it is from the centroid, dx = x − 3 and dy = y − 4, and add up dx·dy:\n\n- (1,2): (−2)(−2) = 4\n- (2,4): (−1)(0) = 0\n- (3,5): (0)(1) = 0\n- (4,4): (1)(0) = 0\n- (5,5): (2)(1) = 2\n\n**Sxy = 6**. It is positive, so y tends to go up when x goes up.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "xs",
+          "type": "double[5]@924",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "xMean",
+          "value": "3.0"
+        },
+        {
+          "name": "ys",
+          "type": "double[5]@925",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "yMean",
+          "value": "4.0"
+        },
+        {
+          "name": "total",
+          "value": "6.0"
+        }
+      ],
+      "evaluations": []
+    },
+    {
+      "title": "Spread: Sxx",
+      "file": "src/main/java/e2m/example/Stats.java",
+      "line": 27,
+      "anchor": "return total;",
+      "text": "Now how spread out x is on its own: Σ (x − 3)² = 4 + 1 + 0 + 1 + 4 = **Sxx = 10**.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "values",
+          "type": "double[5]@924",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "mean",
+          "value": "3.0"
+        },
+        {
+          "name": "total",
+          "value": "10.0"
+        }
+      ],
+      "evaluations": []
+    },
+    {
+      "title": "The slope",
+      "file": "src/main/java/e2m/example/LinearRegression.java",
+      "line": 31,
+      "anchor": "double intercept = yMean - slope * xMean;",
+      "text": "The least-squares slope is simply co-spread divided by spread:\n\n**b = Sxy / Sxx = 6 / 10 = 0.6**\n\nEach extra unit of x adds 0.6 to the predicted y. The highlighted line computes the intercept next.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "xs",
+          "type": "double[5]@924",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "ys",
+          "type": "double[5]@925",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "xMean",
+          "value": "3.0"
+        },
+        {
+          "name": "yMean",
+          "value": "4.0"
+        },
+        {
+          "name": "sxy",
+          "value": "6.0"
+        },
+        {
+          "name": "sxx",
+          "value": "10.0"
+        },
+        {
+          "name": "slope",
+          "value": "0.6"
+        }
+      ],
+      "evaluations": [
+        {
+          "expression": "sxy / sxx",
+          "value": {
+            "name": "sxy / sxx",
+            "value": "0.6"
+          }
+        }
+      ]
+    },
+    {
+      "title": "The intercept",
+      "file": "src/main/java/e2m/example/LinearRegression.java",
+      "line": 33,
+      "anchor": "double rSquared = rSquared(xs, ys, intercept, slope, yMean);",
+      "text": "Because the line goes through the centroid (3, 4): 4 = a + 0.6 × 3, so\n\n**a = ȳ − b·x̄ = 4 − 1.8 = 2.2**\n\nThe fitted line is **y = 2.2 + 0.6·x**.",
+      "commands": [
+        {
+          "action": "over"
+        }
+      ],
+      "variables": [
+        {
+          "name": "xs",
+          "type": "double[5]@924",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "ys",
+          "type": "double[5]@925",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "xMean",
+          "value": "3.0"
+        },
+        {
+          "name": "yMean",
+          "value": "4.0"
+        },
+        {
+          "name": "sxy",
+          "value": "6.0"
+        },
+        {
+          "name": "sxx",
+          "value": "10.0"
+        },
+        {
+          "name": "slope",
+          "value": "0.6"
+        },
+        {
+          "name": "intercept",
+          "value": "2.2"
+        }
+      ],
+      "evaluations": []
+    },
+    {
+      "title": "How good is the fit? R²",
+      "file": "src/main/java/e2m/example/LinearRegression.java",
+      "line": 46,
+      "anchor": "return 1 - ssRes / ssTot;",
+      "text": "R² compares the line's errors with the errors of the dumbest model, \"always predict ȳ\":\n\n- predictions: 2.8, 3.4, 4.0, 4.6, 5.2\n- **SSres** = Σ (y − ŷ)² = 0.64 + 0.36 + 1 + 0.36 + 0.04 = **2.4**\n- **SStot** = Σ (y − ȳ)² = 4 + 0 + 1 + 0 + 1 = **6**\n\n**R² = 1 − 2.4 / 6 = 0.6**: the line explains 60 % of the variation in y. (The debugger shows 2.3999999999999995 — normal floating point rounding.)",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "xs",
+          "type": "double[5]@924",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "ys",
+          "type": "double[5]@925",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "intercept",
+          "value": "2.2"
+        },
+        {
+          "name": "slope",
+          "value": "0.6"
+        },
+        {
+          "name": "yMean",
+          "value": "4.0"
+        },
+        {
+          "name": "ssRes",
+          "value": "2.3999999999999995"
+        },
+        {
+          "name": "ssTot",
+          "value": "6.0"
+        }
+      ],
+      "evaluations": [
+        {
+          "expression": "1 - ssRes / ssTot",
+          "value": {
+            "name": "1 - ssRes / ssTot",
+            "value": "0.6000000000000001"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Using the model",
+      "file": "src/main/java/e2m/example/Main.java",
+      "line": 19,
+      "anchor": "System.out.printf(\"prediction for x = 6: %.2f%n\", fit.predict(6));",
+      "text": "Back in `main`, the fit has been printed (y = 2.20 + 0.60·x, R² = 0.60).\n\nPredicting is just evaluating the line: ŷ(6) = 2.2 + 0.6 × 6 = **5.8**.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "args",
+          "type": "String[0]@923",
+          "value": "[]"
+        },
+        {
+          "name": "xs",
+          "type": "double[5]@924",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "ys",
+          "type": "double[5]@925",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "hasChildren": true
+        },
+        {
+          "name": "fit",
+          "type": "LinearRegression$Fit@1074",
+          "value": "\"Fit[intercept=2.2, slope=0.6, rSquared=0.6000000000000001]\"",
+          "hasChildren": true
+        }
+      ],
+      "evaluations": [
+        {
+          "expression": "fit.predict(6)",
+          "value": {
+            "name": "fit.predict(6)",
+            "value": "5.8"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+<idea-plugin>
+    <id>dev.e2m.explain2me</id>
+    <name>Explain2Me</name>
+    <vendor>Explain2Me</vendor>
+    <description><![CDATA[
+    <p>Explain2Me lets an AI assistant (e.g. Claude Code) drive the IDE debugger to <b>explain code</b>:
+    set breakpoints, step, inspect variables and narrate what is happening, right inside the editor.</p>
+    <ul>
+      <li>Local MCP / HTTP server (<code>http://127.0.0.1:63390/mcp</code>) exposing debugger tools.</li>
+      <li>Explanations recorded as replayable sessions in the project's <code>.e2m/</code> folder.</li>
+      <li><code>// e2m :f note-id</code> (shadow file) and <code>/* e2m := ... */</code> (inline) explanation
+          comments, which can be folded/expanded independently from other comments.</li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.xdebugger</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="dev.e2m.core.E2mStartup"/>
+        <lang.foldingBuilder language="any" implementationClass="dev.e2m.core.E2mFoldingBuilder"/>
+        <gotoDeclarationHandler implementation="dev.e2m.core.E2mGotoNoteHandler"/>
+        <toolWindow id="Explain2Me" anchor="right" icon="/icons/e2m.svg"
+                    factoryClass="dev.e2m.ui.E2mToolWindowFactory"/>
+        <notificationGroup id="Explain2Me" displayType="BALLOON"/>
+    </extensions>
+
+    <actions>
+        <group id="Explain2Me.Group" text="Explain2Me" popup="true" icon="/icons/e2m.svg">
+            <action id="Explain2Me.Collapse" class="dev.e2m.actions.CollapseE2mAction"
+                    text="Collapse e2m Explanations" description="Fold only e2m explanation comments"/>
+            <action id="Explain2Me.Expand" class="dev.e2m.actions.ExpandE2mAction"
+                    text="Expand e2m Explanations" description="Unfold only e2m explanation comments"/>
+            <action id="Explain2Me.Toggle" class="dev.e2m.actions.ToggleE2mAction"
+                    text="Toggle e2m Explanations" description="Fold or unfold all e2m explanation comments">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift E"/>
+            </action>
+            <separator/>
+            <action id="Explain2Me.OpenNote" class="dev.e2m.actions.OpenE2mNoteAction"
+                    text="Show e2m Explanation at Caret" description="Open the shadow note / show the inline explanation for the code at the caret"/>
+            <action id="Explain2Me.AddNote" class="dev.e2m.actions.AddE2mNoteAction"
+                    text="Add e2m Explanation…" description="Insert an e2m marker above the current line and create its shadow note"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+        </group>
+    </actions>
+</idea-plugin>
