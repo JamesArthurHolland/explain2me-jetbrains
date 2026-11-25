@@ -1,0 +1,419 @@
+{
+  "version": 1,
+  "name": "linear-regression",
+  "title": "Least squares, step by step",
+  "description": "Walks through fitting y = a + b·x to five points: means, Sxy, Sxx, slope, intercept and R², across main.py, linear_regression.py, stats.py.",
+  "runConfiguration": "Regression demo",
+  "createdAt": "2026-11-25T15:40:00Z",
+  "steps": [
+    {
+      "title": "The data",
+      "file": "main.py",
+      "line": 12,
+      "anchor": "fit = linear_regression.fit(xs, ys)",
+      "text": "We have five points (x, y): (1,2) (2,4) (3,5) (4,4) (5,5).\n\nGoal: find the straight line **y = a + b·x** that is *closest* to all of them, where closest means the sum of the squared vertical distances is as small as possible (*ordinary least squares*).\n\nNext we resume to the breakpoint inside `linear_regression.fit` to watch it happen.",
+      "commands": [
+        {
+          "action": "set_breakpoint",
+          "file": "main.py",
+          "line": 12,
+          "anchor": "fit = linear_regression.fit(xs, ys)"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "linear_regression.py",
+          "line": 19,
+          "anchor": "if len(xs) != len(ys) or len(xs) < 2:"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "stats.py",
+          "line": 9,
+          "anchor": "return total / len(values)"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "stats.py",
+          "line": 31,
+          "anchor": "return total"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "stats.py",
+          "line": 21,
+          "anchor": "return total"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "linear_regression.py",
+          "line": 34,
+          "anchor": "intercept = y_mean - slope * x_mean"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "linear_regression.py",
+          "line": 48,
+          "anchor": "return 1 - ss_res / ss_tot"
+        },
+        {
+          "action": "set_breakpoint",
+          "file": "main.py",
+          "line": 18,
+          "anchor": "print(f\"prediction for x = 6: {fit.predict(6):.2f}\")"
+        },
+        {
+          "action": "start",
+          "configuration": "Regression demo"
+        }
+      ],
+      "variables": [
+        {
+          "name": "xs",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "type": "list"
+        },
+        {
+          "name": "ys",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "type": "list"
+        }
+      ],
+      "evaluations": []
+    },
+    {
+      "title": "Inside fit(): validate",
+      "file": "linear_regression.py",
+      "line": 19,
+      "anchor": "if len(xs) != len(ys) or len(xs) < 2:",
+      "text": "First a sanity check: we need as many x values as y values, and at least two points — one point does not define a line.\n\nBoth arrays have length 5, so we carry on.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "xs",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "type": "list"
+        },
+        {
+          "name": "ys",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "type": "list"
+        }
+      ],
+      "evaluations": []
+    },
+    {
+      "title": "Mean of x",
+      "file": "stats.py",
+      "line": 9,
+      "anchor": "return total / len(values)",
+      "text": "`stats.mean` adds the values up and divides by how many there are.\n\nFor xs: 1 + 2 + 3 + 4 + 5 = **15**, and 15 / 5 = **x̄ = 3**.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "values",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "type": "list"
+        },
+        {
+          "name": "total",
+          "value": "15.0",
+          "type": "float"
+        }
+      ],
+      "evaluations": [
+        {
+          "expression": "total / len(values)",
+          "value": {
+            "name": "total / len(values)",
+            "value": "3.0",
+            "type": "float"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Mean of y",
+      "file": "stats.py",
+      "line": 9,
+      "anchor": "return total / len(values)",
+      "text": "Same function, now called with ys: 2 + 4 + 5 + 4 + 5 = **20**, so **ȳ = 4**.\n\nThe point (x̄, ȳ) = (3, 4) is the *centroid* of the data. Remember it — the fitted line will pass through it.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "values",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "type": "list"
+        },
+        {
+          "name": "total",
+          "value": "20.0",
+          "type": "float"
+        }
+      ],
+      "evaluations": [
+        {
+          "expression": "total / len(values)",
+          "value": {
+            "name": "total / len(values)",
+            "value": "4.0",
+            "type": "float"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Co-spread: Sxy",
+      "file": "stats.py",
+      "line": 31,
+      "anchor": "return total",
+      "text": "For each point we measure how far it is from the centroid, dx = x − 3 and dy = y − 4, and add up dx·dy:\n\n- (1,2): (−2)(−2) = 4\n- (2,4): (−1)(0) = 0\n- (3,5): (0)(1) = 0\n- (4,4): (1)(0) = 0\n- (5,5): (2)(1) = 2\n\n**Sxy = 6**. It is positive, so y tends to go up when x goes up.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "xs",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "type": "list"
+        },
+        {
+          "name": "x_mean",
+          "value": "3.0",
+          "type": "float"
+        },
+        {
+          "name": "ys",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "type": "list"
+        },
+        {
+          "name": "y_mean",
+          "value": "4.0",
+          "type": "float"
+        },
+        {
+          "name": "total",
+          "value": "6.0",
+          "type": "float"
+        }
+      ],
+      "evaluations": []
+    },
+    {
+      "title": "Spread: Sxx",
+      "file": "stats.py",
+      "line": 21,
+      "anchor": "return total",
+      "text": "Now how spread out x is on its own: Σ (x − 3)² = 4 + 1 + 0 + 1 + 4 = **Sxx = 10**.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "values",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "type": "list"
+        },
+        {
+          "name": "mean_value",
+          "value": "3.0",
+          "type": "float"
+        },
+        {
+          "name": "total",
+          "value": "10.0",
+          "type": "float"
+        }
+      ],
+      "evaluations": []
+    },
+    {
+      "title": "The slope",
+      "file": "linear_regression.py",
+      "line": 34,
+      "anchor": "intercept = y_mean - slope * x_mean",
+      "text": "The least-squares slope is simply co-spread divided by spread:\n\n**b = Sxy / Sxx = 6 / 10 = 0.6**\n\nEach extra unit of x adds 0.6 to the predicted y. The highlighted line computes the intercept next.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "x_mean",
+          "value": "3.0",
+          "type": "float"
+        },
+        {
+          "name": "y_mean",
+          "value": "4.0",
+          "type": "float"
+        },
+        {
+          "name": "sxy",
+          "value": "6.0",
+          "type": "float"
+        },
+        {
+          "name": "sxx",
+          "value": "10.0",
+          "type": "float"
+        },
+        {
+          "name": "slope",
+          "value": "0.6",
+          "type": "float"
+        }
+      ],
+      "evaluations": [
+        {
+          "expression": "sxy / sxx",
+          "value": {
+            "name": "sxy / sxx",
+            "value": "0.6",
+            "type": "float"
+          }
+        }
+      ]
+    },
+    {
+      "title": "The intercept",
+      "file": "linear_regression.py",
+      "line": 36,
+      "anchor": "r2 = r_squared(xs, ys, intercept, slope, y_mean)",
+      "text": "Because the line goes through the centroid (3, 4): 4 = a + 0.6 × 3, so\n\n**a = ȳ − b·x̄ = 4 − 1.8 = 2.2**\n\nThe fitted line is **y = 2.2 + 0.6·x**.",
+      "commands": [
+        {
+          "action": "over"
+        }
+      ],
+      "variables": [
+        {
+          "name": "x_mean",
+          "value": "3.0",
+          "type": "float"
+        },
+        {
+          "name": "y_mean",
+          "value": "4.0",
+          "type": "float"
+        },
+        {
+          "name": "slope",
+          "value": "0.6",
+          "type": "float"
+        },
+        {
+          "name": "intercept",
+          "value": "2.2",
+          "type": "float"
+        }
+      ],
+      "evaluations": []
+    },
+    {
+      "title": "How good is the fit? R²",
+      "file": "linear_regression.py",
+      "line": 48,
+      "anchor": "return 1 - ss_res / ss_tot",
+      "text": "R² compares the line's errors with the errors of the dumbest model, \"always predict ȳ\":\n\n- predictions: 2.8, 3.4, 4.0, 4.6, 5.2\n- **SSres** = Σ (y − ŷ)² = 0.64 + 0.36 + 1 + 0.36 + 0.04 = **2.4**\n- **SStot** = Σ (y − ȳ)² = 4 + 0 + 1 + 0 + 1 = **6**\n\n**R² = 1 − 2.4 / 6 = 0.6**: the line explains 60 % of the variation in y. (The debugger shows 2.3999999999999995 — normal floating point rounding.)",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "intercept",
+          "value": "2.2",
+          "type": "float"
+        },
+        {
+          "name": "slope",
+          "value": "0.6",
+          "type": "float"
+        },
+        {
+          "name": "y_mean",
+          "value": "4.0",
+          "type": "float"
+        },
+        {
+          "name": "ss_res",
+          "value": "2.3999999999999995",
+          "type": "float"
+        },
+        {
+          "name": "ss_tot",
+          "value": "6.0",
+          "type": "float"
+        }
+      ],
+      "evaluations": [
+        {
+          "expression": "1 - ss_res / ss_tot",
+          "value": {
+            "name": "1 - ss_res / ss_tot",
+            "value": "0.6000000000000001",
+            "type": "float"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Using the model",
+      "file": "main.py",
+      "line": 18,
+      "anchor": "print(f\"prediction for x = 6: {fit.predict(6):.2f}\")",
+      "text": "Back in `main`, the fit has been printed (y = 2.20 + 0.60·x, R² = 0.60).\n\nPredicting is just evaluating the line: ŷ(6) = 2.2 + 0.6 × 6 = **5.8**.",
+      "commands": [
+        {
+          "action": "resume"
+        }
+      ],
+      "variables": [
+        {
+          "name": "xs",
+          "value": "[1.0, 2.0, 3.0, 4.0, 5.0]",
+          "type": "list"
+        },
+        {
+          "name": "ys",
+          "value": "[2.0, 4.0, 5.0, 4.0, 5.0]",
+          "type": "list"
+        },
+        {
+          "name": "fit",
+          "value": "Fit(intercept=2.2, slope=0.6, r_squared=0.6000000000000001)",
+          "type": "Fit"
+        }
+      ],
+      "evaluations": [
+        {
+          "expression": "fit.predict(6)",
+          "value": {
+            "name": "fit.predict(6)",
+            "value": "5.8",
+            "type": "float"
+          }
+        }
+      ]
+    }
+  ]
+}

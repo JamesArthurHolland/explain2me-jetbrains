@@ -4,7 +4,9 @@ build/
 .kotlin/
 .idea/workspace.xml
 out/
-example/out/
-example/.idea/workspace.xml
-example/.idea/shelf/
-example/.idea/vcs.xml
+examples/*/out/
+examples/*/.idea/workspace.xml
+examples/*/.idea/shelf/
+examples/*/.idea/vcs.xml
+examples/e2m_example_go_linear_regression/.idea/
+examples/e2m_example_python_linear_regression/.idea/

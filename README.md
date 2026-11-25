@@ -52,7 +52,7 @@ port up to 63399 is used. You can force a port with `-De2m.port=…` in the IDE'
 
 Then ask Claude, for example: *"Use explain2me to walk me through how `LinearRegression.fit` computes the slope, and record it as a session."*
 
-To try it without installing, run `./gradlew runIde`. This opens a sandbox IDE with the plugin and the bundled `example/` project.
+To try it without installing, run `./gradlew runIde`. This opens a sandbox IDE with the plugin and the bundled Java example (`examples/e2m_example_java_linear_regression/`).
 
 ## Tools
 
@@ -118,27 +118,45 @@ that line, so the step can be found again if the code moves), the narration `tex
 
 The files are plain JSON and markdown, so they can be reviewed, committed and shared like code.
 
-## The example (`example/`)
+## Examples (`examples/`)
 
-The example is a least-squares line fit across three files, using the data (1,2) (2,4) (3,5) (4,4) (5,5):
+The same least-squares line fit is provided in three languages. Each one fits a line to the data (1,2) (2,4) (3,5) (4,4) (5,5):
 
-* `Main.java` holds the data, prints the result and makes a prediction.
-* `LinearRegression.java` follows the recipe: means → slope b = Sxy/Sxx → intercept a = ȳ − b·x̄ → R².
-* `Stats.java` has the building blocks `mean`, `sumOfSquares` (Sxx) and `sumOfCrossProducts` (Sxy).
+| Folder | IDE | Files |
+|---|---|---|
+| `e2m_example_java_linear_regression/` | IntelliJ IDEA | `Main.java`, `LinearRegression.java`, `Stats.java` |
+| `e2m_example_go_linear_regression/` | GoLand | `main.go`, `regression.go`, `stats.go` |
+| `e2m_example_python_linear_regression/` | PyCharm (or IDEA with the Python plugin) | `main.py`, `linear_regression.py`, `stats.py` |
 
-The result is **y = 2.2 + 0.6·x** with **R² = 0.6**. The code has both comment styles, the notes are in
-`example/.e2m/notes/`, and `example/.e2m/sessions/linear-regression.json` is a 10-step walkthrough. That session was
-recorded by the plugin itself, driving the real debugger.
+* The entry file holds the data, prints the result and makes a prediction.
+* The regression file follows the recipe: means → slope b = Sxy/Sxx → intercept a = ȳ − b·x̄ → R².
+* The stats file has the building blocks: the mean, the sum of squares (Sxx) and the sum of cross products (Sxy).
 
-To try it, open `example/` in IntelliJ IDEA. If asked, pick a JDK 17+ as the project SDK. Open the **Explain2Me** tool
-window, choose `linear-regression`, then press **Load** and **Next ▶**, or **Live replay** (it uses the *Regression demo*
-run configuration).
+The result is **y = 2.2 + 0.6·x** with **R² = 0.6**. Each example contains:
+* **Comments:** both e2m comment styles. The Python one uses `#` line comments, since Python has no block comments.
+* **Notes:** shadow notes in `.e2m/notes/`.
+* **Session:** a 10-step walkthrough in `.e2m/sessions/linear-regression.json`.
+* **Run configuration:** a *Regression demo* configuration in `.run/`.
+
+The Java and Go sessions were recorded by the plugin itself, driving the real debugger (the Java debugger and Delve).
+
+To try one, open its folder in the matching IDE:
+* **Java:** pick a JDK 17+ as the project SDK if asked.
+* **Go:** a Go SDK is needed.
+* **Python:** pick a Python 3 interpreter.
+
+Then open the **Explain2Me** tool window, choose `linear-regression`, and press **Load** and **Next ▶**, or **Live replay**.
 
 ## Development
 
 * Kotlin, IntelliJ Platform Gradle Plugin 2.x. By default it compiles against your local IDE (`localIde` in
   `gradle.properties`). Set `platformVersion=2025.2` to use a downloaded IDE instead.
-* `./gradlew runIde` opens a sandbox IDE with the example project. `./gradlew buildPlugin` builds the installable zip.
+* `./gradlew runIde` opens a sandbox IDE with the Java example. Use `-PrunExample=examples/<folder>` to open another
+  example, and `-PlocalIde=/Applications/GoLand.app` to run in a different local IDE. `./gradlew buildPlugin` builds the installable zip.
+* **Debugging the plugin:** the sandbox writes its log to
+  `.intellijPlatform/sandbox/explain2me-jetbrains/<IDE>-<version>/log_runIde/idea.log`. The red IDE-error indicator
+  corresponds to `SEVERE` entries in that log, and each entry names the plugin to blame. The plugin logs as `#dev.e2m.*`.
+  In an installed IDE, use *Help → Show Log in Finder/Explorer*.
 * Main sources (`src/main/kotlin/dev/e2m/`):
   * `server/`: the HTTP/MCP server and the tool catalogue
   * `debug/`: the XDebugger facade and the command executor

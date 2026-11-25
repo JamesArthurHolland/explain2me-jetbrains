@@ -49,8 +49,9 @@ intellijPlatform {
 }
 
 tasks.named<org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask>("runIde") {
-    // Open the bundled example so the demo session can be replayed right away.
-    args(listOf(layout.projectDirectory.dir("example").asFile.absolutePath))
+    // Open a bundled example so its demo session can be replayed right away (-PrunExample=examples/<dir>).
+    val example = providers.gradleProperty("runExample").getOrElse("examples/e2m_example_java_linear_regression")
+    args(listOf(layout.projectDirectory.dir(example).asFile.absolutePath))
     jvmArgumentProviders += CommandLineArgumentProvider {
         listOf(
             "-Didea.trust.all.projects=true",
